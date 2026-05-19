@@ -1,0 +1,87 @@
+{
+  "system": {
+    "duration": 180,
+    "warmup": 900,
+    "output_dir": "results",
+    "users_multiplier": 8
+  },
+  "base_experiment_settings": {
+    "qps": 200,
+    "batch_size": 1,
+    "num_columns": 100,
+    "num_table_rows": 10000000,
+    "num_entity_keys": 10000000,
+    "task_type": "query"
+  },
+  "series": [
+    {
+      "name": "query_qps_scaling",
+      "description": "Test Query API QPS scaling",
+      "series_class": "QueryQpsSeries",
+      "x_axis_parameter": "qps",
+      "experiments": [
+        {"qps": 10},
+        {"qps": 50},
+        {"qps": 100},
+        {"qps": 200},
+        {"qps": 500},
+        {"qps": 750},
+        {"qps": 1000},
+        {"qps": 1250},
+        {"qps": 1500}
+      ]
+    },
+    {
+      "name": "query_batch_scaling",
+      "description": "Test batch size impact (multi-point lookups)",
+      "series_class": "QueryBatchSizeSeries",
+      "x_axis_parameter": "batch_size",
+      "experiments": [
+        {"batch_size": 1},
+        {"batch_size": 5},
+        {"batch_size": 10},
+        {"batch_size": 50},
+        {"batch_size": 100}
+      ]
+    },
+    {
+      "name": "query_feature_width_scaling",
+      "description": "Test response size scaling with feature column count",
+      "series_class": "QueryFeatureWidthSeries",
+      "x_axis_parameter": "num_columns",
+      "experiments": [
+        {"num_columns": 10},
+        {"num_columns": 50},
+        {"num_columns": 100},
+        {"num_columns": 200},
+        {"num_columns": 500}
+      ]
+    },
+    {
+      "name": "ingest_qps_scaling",
+      "description": "Test Ingest API throughput scaling",
+      "series_class": "IngestQpsSeries",
+      "x_axis_parameter": "qps",
+      "experiments": [
+        {"qps": 10},
+        {"qps": 50},
+        {"qps": 100},
+        {"qps": 200},
+        {"qps": 500},
+        {"qps": 1000}
+      ]
+    },
+    {
+      "name": "mixed_workload",
+      "description": "Mixed query + ingest workload under increasing QPS",
+      "series_class": "MixedWorkloadSeries",
+      "x_axis_parameter": "qps",
+      "experiments": [
+        {"qps": 50},
+        {"qps": 100},
+        {"qps": 200},
+        {"qps": 500}
+      ]
+    }
+  ]
+}

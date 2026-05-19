@@ -1,0 +1,15 @@
+# Shared dependencies (required for both platforms)
+locust
+python-dotenv
+requests
+matplotlib
+pandas
+
+# Snowflake dependencies (install if targeting Snowflake)
+snowflake-ml-python>=1.36
+snowflake-snowpark-python
+
+# Databricks dependencies (install if targeting Databricks)
+databricks-sdk
+databricks-sql-connector
+databricks-feature-engineering
