@@ -1,5 +1,7 @@
 # Benchmark Results & Findings
 
+> **Disclaimer:** Actual results may vary based on your workload, configuration, and region; comparisons are for illustration only and do not guarantee performance in any specific environment.
+
 Latency results from benchmarking Snowflake ML Feature Store online serving
 across two online store backends, using SPCS job-based execution for the
 lowest and most consistent numbers.

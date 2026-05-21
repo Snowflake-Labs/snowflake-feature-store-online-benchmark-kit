@@ -1,5 +1,7 @@
 # Snowflake Feature Store — Online Serving Latency Benchmark
 
+> **Disclaimer:** Actual results may vary based on your workload, configuration, and region; comparisons are for illustration only and do not guarantee performance in any specific environment.
+
 Reproducible benchmarks for Snowflake Feature Store online serving latency.
 Two benchmark suites cover two online store backends:
 
