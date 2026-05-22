@@ -1,5 +1,7 @@
 # Benchmark Results & Findings
 
+> **Disclaimer:** Actual results may vary based on your workload, configuration, and region; comparisons are for illustration only and do not guarantee performance in any specific environment.
+
 Latency results from benchmarking Snowflake ML Feature Store online serving
 across two online store backends, using SPCS job-based execution for the
 lowest and most consistent numbers.
@@ -140,9 +142,9 @@ export SNOWFLAKE_CONNECTION_NAME=<your-connection>
 export SNOWFLAKE_PAT='<your-programmatic-access-token>'
 export SNOWFLAKE_USER='<your-username>'
 
-python HT_backed_OFT/setup_env.py
-python HT_backed_OFT/submit_job_direct_sql.py --wait --logs   # Direct SQL
-python HT_backed_OFT/submit_job_sdk.py --wait --logs        # SDK
+python latency_hybrid_table/setup_env.py
+python latency_hybrid_table/submit_job_direct_sql.py --wait --logs   # Direct SQL
+python latency_hybrid_table/submit_job_sdk.py --wait --logs        # SDK
 ```
 
 Results: `FS_BENCHMARK_DB.FS_BENCHMARK_SCHEMA.FS_BENCH_JOB_RESULTS_TBL`
@@ -309,13 +311,13 @@ export SNOWFLAKE_PAT='<your-programmatic-access-token>'
 export SNOWFLAKE_USER='<your-username>'
 
 # One-time setup (compute pool, EAI, source data, Feature View, online store)
-python PG_backed_OFT/setup_env.py
+python latency_postgres/setup_env.py
 
 # SDK benchmark
-python PG_backed_OFT/submit_job_sdk.py --logs
+python latency_postgres/submit_job_sdk.py --logs
 
 # REST (Direct HTTP/2) benchmark
-python PG_backed_OFT/submit_job_rest.py --logs
+python latency_postgres/submit_job_rest.py --logs
 ```
 
 Results: `RTFS_DEMO_DB.OFT_DEMO.BENCHMARK_RESULTS`

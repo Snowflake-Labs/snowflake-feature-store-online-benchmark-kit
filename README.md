@@ -1,34 +1,58 @@
-# Snowflake Feature Store — Online Serving Latency Benchmark
+# Snowflake Feature Store — Online Serving Benchmark Kit
 
-Reproducible benchmarks for Snowflake Feature Store online serving latency.
-Two benchmark suites cover two online store backends:
+Reproducible benchmarks for Snowflake Feature Store online serving performance.
 
-| Suite | Directory | Online Store Backend | Status |
-|-------|-----------|---------------------|--------|
-| **Hybrid Table** | `HT_backed_OFT/` | Hybrid Table (Generally Available) | Production |
-| **Postgres Online Service** | `PG_backed_OFT/` | Postgres (Private Preview) | Private Preview |
+## Summary Results
 
-Both suites run as **headless SPCS ML Jobs** via `snowflake.ml.jobs.submit_directory()`
-for the lowest and most consistent results.
+> **Disclaimer:** Actual results may vary based on your workload, configuration, and region; comparisons are for illustration only and do not guarantee performance in any specific environment.
 
-## Headline Results
+### Latency Benchmarks
 
-### Hybrid Table-Backed (100K rows, 10 features, SL pool, 8 threads)
-
-| p50 | p95 | p99 |
-|-----|-----|-----|
-| **47.34ms** | **72.79ms** | **93.04ms** |
-
-### Postgres-Backed (100K rows, 5 features, HIGHMEM_X64_S pool, single-threaded)
+#### Postgres-Backed (100K rows, 5 features, HIGHMEM_X64_S pool, single-threaded)
 
 | p50 | p90 | p99 |
 |--------|-----|-----|
 | **10.9ms** | **12.5ms** | **16.3ms** |
 
+#### Hybrid Table-Backed (100K rows, 10 features, SL pool, 8 threads)
+
+| p50 | p95 | p99 |
+|-----|-----|-----|
+| **47.34ms** | **72.79ms** | **93.04ms** |
 
 For detailed analysis, see [RESULTS.md](RESULTS.md).
 
+### Snowflake vs Databricks Comparison
+
+Under sustained load, Snowflake Feature Store online serving delivers **2.5x lower
+latency** and **7x higher QPS** compared to Databricks Feature Serving.
+
+![Snowflake vs Databricks Online Feature Serving](dbx_snow_ofs_serving.png)
+
+Both benchmarked on comparable instances (CU_2 Databricks, XS tier Snowflake). Databricks endpoint drops requests beyond 200 QPS. Snowflake continues to deliver sub-20ms latencies to 1500 QPS with zero failures.
+
+## Repo Overview
+Three benchmark suites cover latency profiling and throughput load testing:
+
+| Suite | Directory | What It Measures | Backend | Status |
+|-------|-----------|-----------------|---------|--------|
+| **Hybrid Table Latency** | `latency_hybrid_table/` | Per-request latency (p50/p95/p99) | Hybrid Table | Generally Available |
+| **Postgres Latency** | `latency_postgres/` | Per-request latency (p50/p90/p99) | Postgres Online Service | Public Preview |
+| **Throughput Load Test** | `throughput_load_test/` | QPS scaling, batch size, feature width, mixed workloads | Snowflake v.s. Databricks | Cross-platform |
+
+The **latency suites** run as headless SPCS ML Jobs via `snowflake.ml.jobs.submit_directory()`
+for the lowest and most consistent per-request numbers.
+
+The **throughput load test** uses [Locust](https://locust.io/) to drive sustained
+concurrent load, measuring how latency degrades as QPS, batch size, or feature
+width increases and includes Databricks Feature Serving as comparison.
+
 ## Prerequisites
+
+> The following prerequisites, quick starts, best practices, and troubleshooting
+> sections apply to the **latency benchmarks** (`latency_hybrid_table/` and
+> `latency_postgres/`). For the throughput load test, see
+> [`throughput_load_test/README.md`](throughput_load_test/README.md).
 
 - Python 3.9+
 - `"snowflake-ml-python==1.37.0"`
@@ -75,7 +99,7 @@ export SNOWFLAKE_USER='<your-username>'
 ### 3. Provision infrastructure
 
 ```bash
-python HT_backed_OFT/setup_env.py
+python latency_hybrid_table/setup_env.py
 ```
 
 This creates (idempotently):
@@ -93,10 +117,10 @@ This creates (idempotently):
 
 ```bash
 # Direct SQL benchmark (8 threads, 600s warmup, 300s measurement)
-python HT_backed_OFT/submit_job_direct_sql.py --wait --logs
+python latency_hybrid_table/submit_job_direct_sql.py --wait --logs
 
 # SDK benchmark (8 threads, 600s warmup, 300s measurement)
-python HT_backed_OFT/submit_job_sdk.py --wait --logs
+python latency_hybrid_table/submit_job_sdk.py --wait --logs
 ```
 
 Jobs typically take ~15 minutes (600s warmup + 300s measurement).
@@ -124,7 +148,7 @@ The scripts use the `vnextqa6` named connection in `~/.snowflake/connections.tom
 ### 2. Provision infrastructure (one-time)
 
 ```bash
-python PG_backed_OFT/setup_env.py
+python latency_postgres/setup_env.py
 ```
 
 This creates:
@@ -140,12 +164,12 @@ This creates:
 
 **SDK (`read_feature_view`):**
 ```bash
-python PG_backed_OFT/submit_job_sdk.py --logs
+python latency_postgres/submit_job_sdk.py --logs
 ```
 
 **REST (Direct HTTP/2 via `httpx`, no SDK):**
 ```bash
-python PG_backed_OFT/submit_job_rest.py --logs
+python latency_postgres/submit_job_rest.py --logs
 ```
 
 Flags: `--wait` blocks until job finishes; `--logs` streams full output (implies `--wait`).
@@ -166,11 +190,17 @@ ORDER BY p50_ms;
 
 Raw latency arrays are saved as gzipped JSON to `@RTFS_DEMO_DB.OFT_DEMO.BENCHMARK_RESULTS_STAGE`.
 
-## How It Works
+## Throughput Load Test
+
+For the Locust-based throughput and QPS-scaling benchmarks (Snowflake vs Databricks),
+see [`throughput_load_test/README.md`](throughput_load_test/README.md) for full setup,
+configuration, and usage instructions.
+
+## How It Works (Latency Suites)
 
 ### Headless SPCS ML Jobs
 
-Both suites use `snowflake.ml.jobs.submit_directory()` to run benchmarks as
+The latency suites use `snowflake.ml.jobs.submit_directory()` to run benchmarks as
 headless container processes on SPCS. This is critical for valid P99 numbers.
 
 **Why not notebooks?** When a notebook runs in Snowsight (or any Jupyter frontend),
@@ -200,7 +230,7 @@ Laptop --submit_directory(payload_dir)--> Snowflake Stage
                                                |
                +-------------------------------+-------------------------------+
                |                               |                               |
-     HT_backed_OFT:                  PG_backed_OFT SDK:           PG_backed_OFT REST:
+     latency_hybrid_table:            latency_postgres SDK:        latency_postgres REST:
      cursor.execute() or             fs.read_feature_view()          httpx HTTP/2 persistent
      read_feature_view()             (returns pandas DataFrame       POST /api/v1/query
      against $ONLINE Hybrid Table     via internal HTTP/2 REST)       (Online Service endpoint)
@@ -224,22 +254,33 @@ header for HTTP calls to the Online Service endpoint.
 ## Project Structure
 
 ```
-feature_store_benchmarking/
-  HT_backed_OFT/                         # Hybrid Table benchmarks (Generally Available)
-    setup_env.py                          #   One-time infrastructure provisioning
-    submit_job_sdk.py                     #   Submit SDK benchmark as SPCS job
-    submit_job_direct_sql.py              #   Submit Direct SQL benchmark as SPCS job
+snowflake-feature-store-online-benchmark-kit/
+  latency_hybrid_table/                    # Hybrid Table latency benchmarks (GA)
+    setup_env.py                           #   One-time infrastructure provisioning
+    submit_job_sdk.py                      #   Submit SDK benchmark as SPCS job
+    submit_job_direct_sql.py               #   Submit Direct SQL benchmark as SPCS job
     payload/
-      run_benchmark_sdk.py                #   SDK entrypoint (8 threads, 600s warmup)
-      run_benchmark_direct_sql.py         #   Direct SQL entrypoint (8 threads, 600s warmup)
-  PG_backed_OFT/                      # Postgres Online Service benchmarks (Private Preview)
-    setup_env.py                          #   One-time provisioning (pool, EAI, FV, source data)
-    submit_job_sdk.py                     #   Submit SDK benchmark as SPCS job
-    submit_job_rest.py                    #   Submit REST benchmark as SPCS job
+      run_benchmark_sdk.py                 #   SDK entrypoint (8 threads, 600s warmup)
+      run_benchmark_direct_sql.py          #   Direct SQL entrypoint (8 threads, 600s warmup)
+  latency_postgres/                        # Postgres latency benchmarks (Public Preview)
+    setup_env.py                           #   One-time provisioning (pool, EAI, FV, source data)
+    submit_job_sdk.py                      #   Submit SDK benchmark as SPCS job
+    submit_job_rest.py                     #   Submit REST benchmark as SPCS job
     payload/
-      run_benchmark_sdk.py                #   SDK: read_feature_view() entrypoint
-      run_benchmark_rest.py               #   REST: httpx HTTP/2 direct REST entrypoint
-  RESULTS.md                              # Full benchmark findings and comparison tables
+      run_benchmark_sdk.py                 #   SDK: read_feature_view() entrypoint
+      run_benchmark_rest.py                #   REST: httpx HTTP/2 direct REST entrypoint
+  throughput_load_test/                    # Locust-based throughput load test (Snowflake + Databricks)
+    run_experiments.py                     #   Unified CLI entry point
+    experiment_config.py                   #   Config loading and validation
+    locustfile.py                          #   Locust User class (both platforms)
+    series_base.py                         #   Shared BaseSeries ABC
+    series_snowflake.py                    #   Snowflake series classes
+    series_databricks.py                   #   Databricks series classes
+    generate_report.py                     #   HTML report generator
+    config/
+      experiment_config.json               #   Default experiment configuration
+    README.md                              #   Detailed load test documentation
+  RESULTS.md                               # Latency benchmark findings and comparison tables
   README.md
   requirements.txt
   LICENSE

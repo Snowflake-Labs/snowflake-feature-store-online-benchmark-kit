@@ -19,7 +19,7 @@ setup_env.py — One-time idempotent provisioning for SPCS job-based benchmarks.
 Run this ONCE from your laptop before submitting jobs:
 
     export SNOWFLAKE_CONNECTION_NAME=gkfs
-    python HT_backed_OFT/setup_env.py
+    python latency_hybrid_table/setup_env.py
 
 What it provisions:
   - Compute pool  : FS_BENCH_JOB_POOL (CPU_X64_SL, 1 node)
@@ -184,8 +184,8 @@ def main():
 
     print("\n=== setup_env.py complete ===")
     print("Next steps:")
-    print("  python HT_backed_OFT/submit_job_sdk.py --wait --logs         # SDK benchmark")
-    print("  python HT_backed_OFT/submit_job_direct_sql.py --wait --logs  # Direct SQL benchmark")
+    print("  python latency_hybrid_table/submit_job_sdk.py --wait --logs         # SDK benchmark")
+    print("  python latency_hybrid_table/submit_job_direct_sql.py --wait --logs  # Direct SQL benchmark")
     session.close()
 
 
