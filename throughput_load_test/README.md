@@ -1,4 +1,6 @@
-# Feature Store Load Test Suite
+# Feature Store Throughput Load Test
+
+> Part of the [Snowflake Feature Store Online Serving Benchmark Kit](../README.md).
 
 A unified load testing framework for measuring online feature store query performance on both **Snowflake** and **Databricks** platforms.
 
@@ -237,7 +239,7 @@ open results/2024-01-15_14-30-00/final_report.html
 ## File Structure
 
 ```
-main-load-test-combined/
+throughput_load_test/
   __init__.py               # Package marker
   run_experiments.py        # Unified CLI entry point
   experiment_config.py      # Config loading and validation
@@ -246,6 +248,8 @@ main-load-test-combined/
   series_snowflake.py       # Snowflake series classes
   series_databricks.py      # Databricks series classes
   generate_report.py        # HTML report generator
+  config/
+    experiment_config.json  # Default experiment configuration
   README.md                 # This file
 ```
 

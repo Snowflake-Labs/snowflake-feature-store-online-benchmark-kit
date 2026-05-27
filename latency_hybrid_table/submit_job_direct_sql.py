@@ -14,13 +14,16 @@
 # limitations under the License.
 
 """
-submit_job_sdk.py — Submit SDK benchmark as a headless ML Job on SPCS.
+submit_job_direct_sql.py — Submit Direct SQL benchmark as a headless ML Job on SPCS.
+
+Runs `cursor.execute()` against the Hybrid Table `$ONLINE` table directly,
+bypassing the Snowpark SDK overhead.
 
 Usage:
     export SNOWFLAKE_CONNECTION_NAME=gkfs
     export SNOWFLAKE_PAT='<your-pat>'
     export SNOWFLAKE_USER='GHAZALEH'
-    python HT_backed_OFT/submit_job_sdk.py [--wait] [--logs]
+    python latency_hybrid_table/submit_job_direct_sql.py [--wait] [--logs]
 """
 
 import argparse
@@ -37,6 +40,7 @@ WAREHOUSE = "FS_BENCHMARK_WH"
 POOL_NAME = "FS_BENCH_JOB_POOL"
 STAGE     = f"@{DATABASE}.{SCHEMA}.FS_BENCH_JOB_PAYLOAD"
 EAI       = "FS_BENCH_JOB_EAI"
+EAI_SVC   = "FS_BENCH_JOB_SVC_EAI"
 
 
 def _require_env(name):
@@ -48,7 +52,7 @@ def _require_env(name):
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Submit SDK latency benchmark as SPCS job")
+    parser = argparse.ArgumentParser(description="Submit Direct SQL latency benchmark as SPCS job")
     parser.add_argument("--wait", action="store_true", help="Block until the job finishes")
     parser.add_argument("--logs", action="store_true", help="Print job logs (implies --wait)")
     args = parser.parse_args()
@@ -65,13 +69,13 @@ def main():
     print(f"Session ready | account={account} role={role}")
 
     payload_dir = str(pathlib.Path(__file__).parent / "payload")
-    entrypoint  = "run_benchmark_sdk.py"
+    entrypoint  = "run_benchmark_direct_sql.py"
 
     print(f"Payload dir : {payload_dir}")
     print(f"Entrypoint  : {entrypoint}")
     print(f"Stage       : {STAGE}")
     print(f"Pool        : {POOL_NAME}")
-    print(f"EAI         : {EAI}")
+    print(f"EAI         : {EAI}, {EAI_SVC}")
     print()
 
     job = submit_directory(
@@ -79,7 +83,7 @@ def main():
         compute_pool=POOL_NAME,
         entrypoint=entrypoint,
         stage_name=STAGE,
-        external_access_integrations=[EAI],
+        external_access_integrations=[EAI, EAI_SVC],
         session=session,
         database=DATABASE,
         schema=SCHEMA,
@@ -96,7 +100,7 @@ def main():
 
     print(f"Job submitted  | id={job.id}")
     print(f"Monitor in Snowsight -> Jobs, or run:")
-    print(f"  python HT_backed_OFT/submit_job_sdk.py --logs")
+    print(f"  python latency_hybrid_table/submit_job_direct_sql.py --logs")
 
     if args.wait:
         print("\nWaiting for job to complete ...")
